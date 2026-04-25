@@ -119,7 +119,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
     { time: "14:20", title: "Чик-Чирикино", age: "0+", desc: "Аквапарк — Игра в гагару — Кладоискатели — Первая работа — Годовщина — Космос — Клюв и магия" },
     { time: "16:00", title: "Большое Шоу", age: "6+", desc: "Познавательная игра специально к юбилею любимого телеканала «Карусель»" },
     { time: "16:30", title: "Сказочный патруль. Дорога домой", age: "0+", desc: "Принц Зарт — Неуловимый Хват — Баллада о Пастилине — Кафе «Баранка» — Сила красоты — Таинственный рыцарь — Волшебные помощники — Сад Дубомира" },
-    { time: "19:30", title: "Фиксики. Большой секрет", age: "6+", desc: "Героям нужно объединиться, чтобы спасти свой самый большой секрет!", current: true },
+    { time: "19:30", title: "Фиксики. Большой секрет", age: "6+", desc: "Героям нужно объединиться, чтобы спасти свой самый большой секрет!" },
     { time: "20:40", title: "Фиксипелки", age: "0+", desc: "Шоколадка — Зонтик — Ниточка — Холодильник — Колесо — Пупс — Батарейки — Компьютер — Рюкзак — Бом-тили-бом" },
     { time: "21:00", title: "Спокойной ночи, малыши!", age: "0+", desc: "Передача «Спокойной ночи, малыши!» — уникальное явление на телевидении. Программа существует с сентября 1964 года. Она никогда не переставала выходить" },
     { time: "21:15", title: "Ум и Хрум", age: "0+", desc: "Запекантус — Тревожные сырки — Молекулярная кухня — Мини-Хрум — Мятная реакция — Блинотавр — Секретный агент — Опасная вкусняшка — Третий глаз" },
@@ -131,7 +131,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   ],
   "Россия 1": [
     { time: "06:00", title: "Утро России" },
-    { time: "09:00", title: "О самом главном", current: true },
+    { time: "09:00", title: "О самом главном" },
     { time: "10:00", title: "Вести в 10:00" },
     { time: "12:00", title: "Судьба человека" },
     { time: "14:00", title: "Вести в 14:00" },
@@ -144,7 +144,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
     { time: "06:00", title: "НТВ утром" },
     { time: "08:00", title: "Утро. Самое лучшее" },
     { time: "10:00", title: "Смотр" },
-    { time: "11:00", title: "Следствие вели...", current: true },
+    { time: "11:00", title: "Следствие вели..." },
     { time: "13:00", title: "Центральное телевидение" },
     { time: "15:00", title: "Ты не поверишь!" },
     { time: "17:00", title: "ЧП. Расследование" },
@@ -155,7 +155,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
     { time: "06:00", title: "Том и Джерри" },
     { time: "07:30", title: "Три кота" },
     { time: "09:00", title: "СТС Kids" },
-    { time: "11:00", title: "Барбоскины", current: true },
+    { time: "11:00", title: "Барбоскины" },
     { time: "12:30", title: "Кино на СТС" },
     { time: "15:00", title: "Семейный просмотр" },
     { time: "18:00", title: "Воронины" },
@@ -165,7 +165,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   "ТНТ": [
     { time: "07:00", title: "Мультфильмы" },
     { time: "09:00", title: "Однажды в России" },
-    { time: "11:00", title: "Интерны", current: true },
+    { time: "11:00", title: "Интерны" },
     { time: "13:00", title: "Студия Союз" },
     { time: "15:00", title: "Comedy Club" },
     { time: "18:00", title: "Физрук" },
@@ -175,7 +175,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   "Матч ТВ": [
     { time: "07:00", title: "Все на Матч!" },
     { time: "09:00", title: "Студия Матч" },
-    { time: "11:00", title: "Футбол. Обзор туров", current: true },
+    { time: "11:00", title: "Футбол. Обзор туров" },
     { time: "13:00", title: "Хоккей. КХЛ" },
     { time: "16:00", title: "Футбол. РФПЛ" },
     { time: "19:00", title: "Вечер на Матч" },
@@ -184,7 +184,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   "Культура": [
     { time: "07:00", title: "Утро на Культуре" },
     { time: "09:00", title: "Новости культуры" },
-    { time: "10:00", title: "Наблюдатель", current: true },
+    { time: "10:00", title: "Наблюдатель" },
     { time: "12:00", title: "Власть факта" },
     { time: "14:00", title: "Кинопоэзия" },
     { time: "16:00", title: "Документальный фильм" },
@@ -193,7 +193,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
     { time: "22:00", title: "Худсовет" },
   ],
   "Россия 24": [
-    { time: "00:00", title: "Новости 24/7", current: true },
+    { time: "00:00", title: "Новости 24/7" },
     { time: "09:00", title: "Утренние новости" },
     { time: "12:00", title: "Дневные новости" },
     { time: "18:00", title: "Вечерние новости" },
@@ -201,7 +201,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   ],
   "Пятый канал": [
     { time: "06:00", title: "Утро на пятом" },
-    { time: "09:00", title: "Место происшествия", current: true },
+    { time: "09:00", title: "Место происшествия" },
     { time: "11:00", title: "Сейчас" },
     { time: "12:00", title: "Детективы" },
     { time: "16:00", title: "Следователи" },
@@ -211,7 +211,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   "РЕН ТВ": [
     { time: "07:00", title: "Добров в эфире" },
     { time: "09:00", title: "Территория заблуждений" },
-    { time: "12:00", title: "Засекреченные списки", current: true },
+    { time: "12:00", title: "Засекреченные списки" },
     { time: "15:00", title: "Военная тайна" },
     { time: "18:00", title: "Информационная программа" },
     { time: "20:00", title: "Документальный фильм" },
@@ -219,7 +219,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   ],
   "ОТР": [
     { time: "07:00", title: "ОТРажение" },
-    { time: "09:00", title: "Большая страна", current: true },
+    { time: "09:00", title: "Большая страна" },
     { time: "12:00", title: "ОТРажение (дневное)" },
     { time: "15:00", title: "Документальный цикл" },
     { time: "18:00", title: "ОТРажение" },
@@ -227,7 +227,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
   ],
   "ТВК": [
     { time: "07:00", title: "Новости ТВК" },
-    { time: "09:00", title: "Утро с ТВК", current: true },
+    { time: "09:00", title: "Утро с ТВК" },
     { time: "12:00", title: "Новости ТВК" },
     { time: "15:00", title: "Местный прогноз" },
     { time: "18:00", title: "Новости ТВК вечер" },
@@ -263,6 +263,27 @@ const NAV = [
 function extractVkId(url: string): string | null {
   const m = url.match(/video(-?\d+_\d+)/);
   return m ? m[1] : null;
+}
+
+// Преобразует "HH:MM" в минуты от начала суток
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// Определяет индекс текущей передачи по реальному времени
+function getCurrentIndex(items: ScheduleItem[]): number {
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  let cur = -1;
+  for (let i = 0; i < items.length; i++) {
+    const start = timeToMinutes(items[i].time);
+    // учитываем переход через полночь: передачи после 00:00 считаем как >24h
+    const adjustedStart = start < 300 ? start + 1440 : start;
+    const adjustedNow = nowMin < 300 ? nowMin + 1440 : nowMin;
+    if (adjustedNow >= adjustedStart) cur = i;
+  }
+  return cur;
 }
 
 function useClock() {
@@ -751,51 +772,61 @@ function ChannelsPage() {
                 <div className="text-3xl mb-2">📋</div>
                 <div className="text-sm">Программа передач будет добавлена позже</div>
               </div>
-            ) : (
-              <div className="grid gap-2">
-                {(SCHEDULE_DATA[selectedCh.name] || []).map((item, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-4 rounded-2xl px-5 py-3 transition-all ${
-                      item.current
-                        ? "bg-gradient-to-r from-[#E91E8C]/20 to-[#FF6B35]/10 border border-[#E91E8C]/30"
-                        : "bg-white/5 border border-white/0"
-                    }`}
-                  >
-                    <div
-                      className={`font-black text-sm w-12 flex-shrink-0 ${item.current ? "text-[#E91E8C]" : "text-white/40"}`}
-                      style={{ fontFamily: "Nunito" }}
-                    >
-                      {item.time}
-                    </div>
-                    {item.current && (
-                      <div className="w-2 h-2 rounded-full bg-[#E91E8C] flex-shrink-0 animate-pulse" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-semibold text-sm flex items-center gap-2 flex-wrap ${item.current ? "text-white" : "text-white/80"}`}
-                        style={{ fontFamily: "Golos Text" }}>
-                        {item.title}
-                        {item.age && (
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${item.current ? "bg-white/20 text-white" : "bg-white/10 text-white/40"}`}>
-                            {item.age}
+            ) : (() => {
+              const items = SCHEDULE_DATA[selectedCh.name] || [];
+              const curIdx = getCurrentIndex(items);
+              return (
+                <div className="grid gap-2">
+                  {items.map((item, i) => {
+                    const isCurrent = i === curIdx;
+                    const isPast = i < curIdx;
+                    return (
+                      <div
+                        key={i}
+                        className={`flex items-center gap-4 rounded-2xl px-5 py-3 transition-all ${
+                          isCurrent
+                            ? "bg-gradient-to-r from-[#E91E8C]/20 to-[#FF6B35]/10 border border-[#E91E8C]/30"
+                            : isPast
+                            ? "bg-white/3 border border-white/0 opacity-40"
+                            : "bg-white/5 border border-white/0"
+                        }`}
+                      >
+                        <div
+                          className={`font-black text-sm w-12 flex-shrink-0 ${isCurrent ? "text-[#E91E8C]" : isPast ? "text-white/25" : "text-white/40"}`}
+                          style={{ fontFamily: "Nunito" }}
+                        >
+                          {item.time}
+                        </div>
+                        {isCurrent && (
+                          <div className="w-2 h-2 rounded-full bg-[#E91E8C] flex-shrink-0 animate-pulse" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-semibold text-sm flex items-center gap-2 flex-wrap ${isCurrent ? "text-white" : isPast ? "text-white/40" : "text-white/80"}`}
+                            style={{ fontFamily: "Golos Text" }}>
+                            {item.title}
+                            {item.age && (
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0 ${isCurrent ? "bg-white/20 text-white" : "bg-white/10 text-white/30"}`}>
+                                {item.age}
+                              </span>
+                            )}
+                          </div>
+                          {item.desc && (
+                            <div className={`text-xs mt-0.5 line-clamp-1 ${isCurrent ? "text-pink-200/60" : "text-white/25"}`}>
+                              {item.desc}
+                            </div>
+                          )}
+                        </div>
+                        {isCurrent && (
+                          <span className="text-[10px] font-bold text-[#E91E8C] bg-[#E91E8C]/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                            В ЭФИРЕ
                           </span>
                         )}
                       </div>
-                      {item.desc && (
-                        <div className={`text-xs mt-0.5 line-clamp-1 ${item.current ? "text-green-100/70" : "text-white/30"}`}>
-                          {item.desc}
-                        </div>
-                      )}
-                    </div>
-                    {item.current && (
-                      <span className="text-[10px] font-bold text-[#E91E8C] bg-[#E91E8C]/10 px-2 py-0.5 rounded-full flex-shrink-0">
-                        В ЭФИРЕ
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
