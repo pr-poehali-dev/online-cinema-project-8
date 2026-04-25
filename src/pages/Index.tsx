@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Hls from "hls.js";
 import Icon from "@/components/ui/icon";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
@@ -234,16 +235,16 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
 };
 
 const CHANNELS: Channel[] = [
-  { id: "karusel", name: "Карусель", short: "🎠", color: "#E91E8C", emoji: "🎠", desc: "Главный детский телеканал России" },
-  { id: "russia1", name: "Россия 1", short: "Р1", color: "#E53935", emoji: "📺", desc: "Главный государственный телеканал страны" },
-  { id: "ntv", name: "НТВ", short: "НТВ", color: "#1565C0", emoji: "📰", desc: "Новости, кино и расследования" },
-  { id: "russia24", name: "Россия 24", short: "Р24", color: "#00838F", emoji: "🌐", desc: "Круглосуточный новостной канал" },
-  { id: "5tv", name: "Пятый канал", short: "5", color: "#2E7D32", emoji: "5️⃣", desc: "Новости, детективы, сериалы" },
-  { id: "rentv", name: "РЕН ТВ", short: "РЕН", color: "#F57F17", emoji: "🔍", desc: "Документальные расследования" },
-  { id: "sts", name: "СТС", short: "СТС", color: "#E91E8C", emoji: "🎭", desc: "Семейное развлекательное ТВ" },
-  { id: "tnt", name: "ТНТ", short: "ТНТ", color: "#FF6B35", emoji: "😄", desc: "Юмор и реалити-шоу" },
+  { id: "karusel", name: "Карусель", short: "🎠", color: "#E91E8C", emoji: "🎠", desc: "Главный детский телеканал России", liveUrl: "https://zabava-htlive.cdn.ngenix.net/hls/CH_KARUSEL/variant.m3u8" },
+  { id: "russia1", name: "Россия 1", short: "Р1", color: "#E53935", emoji: "📺", desc: "Главный государственный телеканал страны", liveUrl: "https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/russia1-hd/index.m3u8" },
+  { id: "ntv", name: "НТВ", short: "НТВ", color: "#1565C0", emoji: "📰", desc: "Новости, кино и расследования", liveUrl: "https://zabava-htlive.cdn.ngenix.net/hls/CH_NTV/variant.m3u8" },
+  { id: "russia24", name: "Россия 24", short: "Р24", color: "#00838F", emoji: "🌐", desc: "Круглосуточный новостной канал", liveUrl: "https://vgtrkregion-reg.cdnvideo.ru/vgtrk/abakan/russia24-sd/index.m3u8" },
+  { id: "5tv", name: "Пятый канал", short: "5", color: "#2E7D32", emoji: "5️⃣", desc: "Новости, детективы, сериалы", liveUrl: "https://zabava-htlive.cdn.ngenix.net/hls/CH_5TV/variant.m3u8" },
+  { id: "rentv", name: "РЕН ТВ", short: "РЕН", color: "#F57F17", emoji: "🔍", desc: "Документальные расследования", liveUrl: "https://zabava-htlive.cdn.ngenix.net/hls/CH_RENTV/variant.m3u8" },
+  { id: "sts", name: "СТС", short: "СТС", color: "#c0136e", emoji: "🎭", desc: "Семейное развлекательное ТВ", liveUrl: "https://zabava-htlive.cdn.ngenix.net/hls/CH_STS/variant.m3u8" },
+  { id: "tnt", name: "ТНТ", short: "ТНТ", color: "#FF6B35", emoji: "😄", desc: "Юмор и реалити-шоу", liveUrl: "https://streaming.televizor-24-tochka.ru/live/38.m3u8" },
   { id: "match", name: "Матч ТВ", short: "⚽", color: "#43A047", emoji: "⚽", desc: "Спортивные трансляции 24/7" },
-  { id: "kultura", name: "Культура", short: "К", color: "#6A1B9A", emoji: "🎭", desc: "Классика, документальное кино, искусство" },
+  { id: "kultura", name: "Культура", short: "К", color: "#6A1B9A", emoji: "🎭", desc: "Классика, документальное кино, искусство", liveUrl: "https://vgtrkregion-reg.cdnvideo.ru/vgtrk/0/kultura-hd/index.m3u8" },
   { id: "otr", name: "ОТР", short: "ОТР", color: "#00796B", emoji: "🗣️", desc: "Общественное телевидение России" },
   { id: "tvk", name: "ТВК", short: "ТВК", color: "#37474F", emoji: "📡", desc: "Региональное телевидение Красноярска" },
 ];
@@ -283,6 +284,87 @@ function LiveClock() {
       <span className="text-white/70 text-sm font-mono font-bold tracking-widest">
         {hh}<span className="text-white/30 animate-pulse">:</span>{mm}<span className="text-white/30 animate-pulse">:</span>{ss}
       </span>
+    </div>
+  );
+}
+
+// ─── HLS PLAYER ──────────────────────────────────────────────────────────────
+
+function HlsPlayer({ url, channelName, onClose }: { url: string; channelName: string; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    setError(false);
+    setLoading(true);
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: false });
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setLoading(false);
+        video.play().catch(() => {});
+      });
+      hls.on(Hls.Events.ERROR, (_e, data) => {
+        if (data.fatal) setError(true);
+      });
+      return () => hls.destroy();
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = url;
+      video.addEventListener("loadedmetadata", () => {
+        setLoading(false);
+        video.play().catch(() => {});
+      });
+    } else {
+      setError(true);
+    }
+  }, [url]);
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 flex-shrink-0">
+        <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+          <Icon name="X" size={20} />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-white font-bold" style={{ fontFamily: "Golos Text" }}>{channelName}</span>
+          <span className="text-red-400 text-xs font-bold bg-red-500/10 px-2 py-0.5 rounded-full">ПРЯМОЙ ЭФИР</span>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center bg-black">
+        {error ? (
+          <div className="text-center text-white/40">
+            <Icon name="WifiOff" size={48} />
+            <div className="mt-3 font-semibold">Трансляция недоступна</div>
+            <div className="text-sm mt-1 text-white/30">Возможно, канал временно не работает</div>
+            <button onClick={onClose} className="mt-4 px-4 py-2 bg-white/10 rounded-xl text-sm text-white hover:bg-white/20 transition-colors">
+              Закрыть
+            </button>
+          </div>
+        ) : (
+          <div className="relative w-full max-w-5xl aspect-video">
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl">
+                <div className="text-white/50 text-sm flex flex-col items-center gap-2">
+                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  Загрузка эфира...
+                </div>
+              </div>
+            )}
+            <video
+              ref={videoRef}
+              className="w-full h-full rounded-2xl bg-black"
+              controls
+              playsInline
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -582,90 +664,132 @@ function SeriesPage() {
 
 function ChannelsPage() {
   const [selectedCh, setSelectedCh] = useState<Channel | null>(null);
+  const [liveChannel, setLiveChannel] = useState<Channel | null>(null);
 
   return (
     <div className="min-h-screen bg-[#0d0f1a]">
+      {liveChannel && liveChannel.liveUrl && (
+        <HlsPlayer
+          url={liveChannel.liveUrl}
+          channelName={liveChannel.name}
+          onClose={() => setLiveChannel(null)}
+        />
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
         <h1 className="text-3xl font-black text-white mb-1" style={{ fontFamily: "Nunito" }}>📡 ТВ-каналы</h1>
-        <p className="text-white/40 mb-8">Программа передач федеральных каналов</p>
+        <p className="text-white/40 mb-8">Прямой эфир и программа передач</p>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-10">
           {CHANNELS.map((ch) => (
-            <button
+            <div
               key={ch.id}
-              onClick={() => setSelectedCh(selectedCh?.id === ch.id ? null : ch)}
-              className={`rounded-2xl p-4 text-left transition-all border ${
+              className={`rounded-2xl p-4 transition-all border ${
                 selectedCh?.id === ch.id
                   ? "border-[#E91E8C] bg-[#E91E8C]/10 shadow-lg shadow-pink-900/20"
-                  : "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                  : "border-white/5 bg-white/5"
               }`}
             >
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3 font-black"
-                style={{ background: ch.color + "25" }}
+              <button
+                onClick={() => setSelectedCh(selectedCh?.id === ch.id ? null : ch)}
+                className="w-full text-left"
               >
-                {ch.emoji}
-              </div>
-              <div className="font-bold text-white text-sm" style={{ fontFamily: "Golos Text" }}>{ch.name}</div>
-              <div className="text-white/30 text-xs mt-0.5 leading-tight">{ch.desc}</div>
-            </button>
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3 font-black"
+                  style={{ background: ch.color + "25" }}
+                >
+                  {ch.emoji}
+                </div>
+                <div className="font-bold text-white text-sm" style={{ fontFamily: "Golos Text" }}>{ch.name}</div>
+                <div className="text-white/30 text-xs mt-0.5 leading-tight">{ch.desc}</div>
+              </button>
+              {ch.liveUrl && (
+                <button
+                  onClick={() => setLiveChannel(ch)}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all text-white"
+                  style={{ background: ch.color }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  Прямой эфир
+                </button>
+              )}
+            </div>
           ))}
         </div>
 
         {/* Schedule panel */}
         {selectedCh && (
           <div className="animate-fade-in">
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black"
-                style={{ background: selectedCh.color + "30" }}
-              >
-                {selectedCh.emoji}
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black"
+                  style={{ background: selectedCh.color + "30" }}
+                >
+                  {selectedCh.emoji}
+                </div>
+                <div>
+                  <h2 className="text-white font-black text-lg" style={{ fontFamily: "Nunito" }}>{selectedCh.name}</h2>
+                  <div className="text-white/30 text-xs">Программа передач · 25 апреля</div>
+                </div>
               </div>
-              <div>
-                <h2 className="text-white font-black text-lg" style={{ fontFamily: "Nunito" }}>{selectedCh.name}</h2>
-                <div className="text-white/30 text-xs">Программа передач · 25 апреля</div>
-              </div>
+              {selectedCh.liveUrl && (
+                <button
+                  onClick={() => setLiveChannel(selectedCh)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+                  style={{ background: selectedCh.color }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  Смотреть в эфире
+                </button>
+              )}
             </div>
 
-            <div className="grid gap-2">
-              {(SCHEDULE_DATA[selectedCh.name] || []).map((item, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center gap-4 rounded-2xl px-5 py-3 transition-all ${
-                    item.current
-                      ? "bg-gradient-to-r from-[#E91E8C]/20 to-[#FF6B35]/10 border border-[#E91E8C]/30"
-                      : "bg-white/5 border border-white/0"
-                  }`}
-                >
+            {(SCHEDULE_DATA[selectedCh.name] || []).length === 0 ? (
+              <div className="text-center py-12 text-white/20">
+                <div className="text-3xl mb-2">📋</div>
+                <div className="text-sm">Программа передач будет добавлена позже</div>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {(SCHEDULE_DATA[selectedCh.name] || []).map((item, i) => (
                   <div
-                    className={`font-black text-sm w-12 flex-shrink-0 ${item.current ? "text-[#E91E8C]" : "text-white/40"}`}
-                    style={{ fontFamily: "Nunito" }}
+                    key={i}
+                    className={`flex items-center gap-4 rounded-2xl px-5 py-3 transition-all ${
+                      item.current
+                        ? "bg-gradient-to-r from-[#E91E8C]/20 to-[#FF6B35]/10 border border-[#E91E8C]/30"
+                        : "bg-white/5 border border-white/0"
+                    }`}
                   >
-                    {item.time}
+                    <div
+                      className={`font-black text-sm w-12 flex-shrink-0 ${item.current ? "text-[#E91E8C]" : "text-white/40"}`}
+                      style={{ fontFamily: "Nunito" }}
+                    >
+                      {item.time}
+                    </div>
+                    {item.current && (
+                      <div className="w-2 h-2 rounded-full bg-[#E91E8C] flex-shrink-0 animate-pulse" />
+                    )}
+                    <div className={`font-semibold text-sm flex-1 ${item.current ? "text-white" : "text-white/70"}`}
+                      style={{ fontFamily: "Golos Text" }}>
+                      {item.title}
+                    </div>
+                    {item.current && (
+                      <span className="text-[10px] font-bold text-[#E91E8C] bg-[#E91E8C]/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                        В ЭФИРЕ
+                      </span>
+                    )}
                   </div>
-                  {item.current && (
-                    <div className="w-2 h-2 rounded-full bg-[#E91E8C] flex-shrink-0 animate-pulse" />
-                  )}
-                  <div className={`font-semibold text-sm flex-1 ${item.current ? "text-white" : "text-white/70"}`}
-                    style={{ fontFamily: "Golos Text" }}>
-                    {item.title}
-                  </div>
-                  {item.current && (
-                    <span className="text-[10px] font-bold text-[#E91E8C] bg-[#E91E8C]/10 px-2 py-0.5 rounded-full flex-shrink-0">
-                      В ЭФИРЕ
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {!selectedCh && (
           <div className="text-center py-16 text-white/20">
             <div className="text-4xl mb-3">📺</div>
-            <div className="font-semibold">Выберите канал, чтобы увидеть программу передач</div>
+            <div className="font-semibold">Выберите канал, чтобы увидеть программу и прямой эфир</div>
           </div>
         )}
       </div>
