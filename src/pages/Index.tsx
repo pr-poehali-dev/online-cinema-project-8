@@ -1,554 +1,740 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
-// ─── DATA ───────────────────────────────────────────────────────────────────
+// ─── TYPES ───────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS = [
-  { id: "home", label: "Главная", icon: "Home" },
-  { id: "series", label: "Мультсериалы", icon: "Tv" },
-  { id: "channels", label: "ТВ-каналы", icon: "Radio" },
-  { id: "schedule", label: "Программа", icon: "CalendarDays" },
-  { id: "search", label: "Поиск", icon: "Search" },
-];
+type Episode = {
+  num: number;
+  title: string;
+  url: string;
+};
 
-const SERIES = [
-  { id: 1, title: "Маша и Медведь", age: "0+", genre: "Комедия", episodes: 94, color: "#E91E8C", emoji: "🐻" },
-  { id: 2, title: "Фиксики", age: "0+", genre: "Познавательный", episodes: 167, color: "#3498DB", emoji: "🔧" },
-  { id: 3, title: "Смешарики", age: "0+", genre: "Комедия", episodes: 330, color: "#2ECC71", emoji: "🦔" },
-  { id: 4, title: "Барбоскины", age: "0+", genre: "Семейный", episodes: 200, color: "#FF6B35", emoji: "🐕" },
-  { id: 5, title: "Лунтик", age: "0+", genre: "Приключения", episodes: 560, color: "#9B59B6", emoji: "🌙" },
-  { id: 6, title: "Зоомания", age: "6+", genre: "Природа", episodes: 78, color: "#1ABC9C", emoji: "🦁" },
-  { id: 7, title: "Сказочный патруль", age: "0+", genre: "Фэнтези", episodes: 104, color: "#F1C40F", emoji: "✨" },
-  { id: 8, title: "Чик-Чирикино", age: "0+", genre: "Приключения", episodes: 52, color: "#E74C3C", emoji: "🐦" },
-];
+type Series = {
+  id: string;
+  title: string;
+  age: string;
+  seasons: number;
+  episodes: number;
+  years: string;
+  desc: string;
+  cover: string;
+  color: string;
+  gradient: string;
+  episodeList: Episode[][];
+};
 
-const CHANNELS = [
-  { id: 1, name: "Карусель", desc: "Главный детский телеканал России", color: "#E91E8C", emoji: "🎠", freq: "50 кнопка" },
-  { id: 2, name: "Мульт", desc: "Лучшие отечественные мультфильмы", color: "#FF6B35", emoji: "🎨", freq: "72 кнопка" },
-  { id: 3, name: "Disney", desc: "Любимые персонажи Disney и Marvel", color: "#3498DB", emoji: "🏰", freq: "73 кнопка" },
-  { id: 4, name: "Nickelodeon", desc: "Развлечения без остановки", color: "#F1C40F", emoji: "🧡", freq: "74 кнопка" },
-  { id: 5, name: "СТС Kids", desc: "Приключения и юмор для детей", color: "#2ECC71", emoji: "🌟", freq: "51 кнопка" },
-  { id: 6, name: "Мульт в кино", desc: "Кино для всей семьи", color: "#9B59B6", emoji: "🎬", freq: "75 кнопка" },
-];
+type Channel = {
+  id: string;
+  name: string;
+  short: string;
+  color: string;
+  emoji: string;
+  desc: string;
+  liveUrl?: string;
+};
 
 type ScheduleItem = {
   time: string;
   title: string;
-  age: string;
-  desc: string;
+  age?: string;
   current?: boolean;
-  past?: boolean;
-  emoji: string;
 };
 
-const SCHEDULE: Record<string, ScheduleItem[]> = {
-  "25": [
-    { time: "07:00", title: "Маша и Медведь", age: "0+", desc: "Репетиция оркестра — Усатый-полосатый", past: true, emoji: "🐻" },
-    { time: "08:00", title: "Смешарики", age: "0+", desc: "Новые серии", past: true, emoji: "🦔" },
-    { time: "09:30", title: "Фиксики", age: "0+", desc: "Как устроен мир вокруг нас", past: true, emoji: "🔧" },
-    { time: "12:00", title: "Парк Турум-Бурум", age: "0+", desc: "Развлекательное шоу, наполненное песнями и танцами", past: true, emoji: "🎡" },
-    { time: "12:15", title: "Барбоскины", age: "0+", desc: "Важное событие — Нобелевская премия — Резонанс", past: true, emoji: "🐕" },
-    { time: "14:00", title: "Зоомания", age: "6+", desc: "Кошачьи", past: true, emoji: "🦁" },
-    { time: "14:20", title: "Чик-Чирикино", age: "0+", desc: "Аквапарк — Игра в гагару — Кладоискатели", past: true, emoji: "🐦" },
-    { time: "16:00", title: "Большое Шоу", age: "6+", desc: "Познавательная игра к юбилею телеканала «Карусель»", past: true, emoji: "🌟" },
-    { time: "16:30", title: "Сказочный патруль", age: "0+", desc: "Дорога домой — Принц Зарт — Неуловимый Хват", past: true, emoji: "✨" },
-    { time: "19:30", title: "Фиксики. Большой секрет", age: "6+", desc: "Героям нужно объединиться, чтобы спасти самый большой секрет!", current: true, emoji: "🔧" },
-    { time: "20:40", title: "Фиксипелки", age: "0+", desc: "Шоколадка — Зонтик — Ниточка — Холодильник", emoji: "🎵" },
-    { time: "21:00", title: "Спокойной ночи, малыши!", age: "0+", desc: "Уникальное явление на телевидении с 1964 года", emoji: "🌙" },
-    { time: "21:15", title: "Ум и Хрум", age: "0+", desc: "Запекантус — Тревожные сырки — Молекулярная кухня", emoji: "🧠" },
-    { time: "23:00", title: "Дикие Скричеры!", age: "6+", desc: "Фальшивый Ксандер", emoji: "🦊" },
-    { time: "23:15", title: "Приключения Пети и Волка", age: "12+", desc: "Дело Книги счастья — Дело о Мастерах блефа", emoji: "🐺" },
-    { time: "02:00", title: "Маша и Медведь", age: "0+", desc: "Затерянный мир — Зуб даю! — Умный в гору не пойдёт", emoji: "🐻" },
-  ],
-  "26": [
-    { time: "07:00", title: "Лунтик", age: "0+", desc: "Доброе утро с Лунтиком", emoji: "🌙" },
-    { time: "09:00", title: "Смешарики", age: "0+", desc: "Утренний блок мультфильмов", emoji: "🦔" },
-    { time: "11:00", title: "Маша и Медведь", age: "0+", desc: "Лучшие серии", emoji: "🐻" },
-    { time: "13:00", title: "Фиксики", age: "0+", desc: "Воскресный марафон", emoji: "🔧" },
-    { time: "15:00", title: "Сказочный патруль", age: "0+", desc: "Новые приключения", emoji: "✨" },
-    { time: "17:00", title: "Барбоскины", age: "0+", desc: "Семейный вечер", emoji: "🐕" },
-    { time: "19:00", title: "Зоомания", age: "6+", desc: "Воскресный выпуск", emoji: "🦁" },
-    { time: "21:00", title: "Спокойной ночи, малыши!", age: "0+", desc: "Традиционная вечерняя передача", emoji: "🌙" },
-  ],
-};
+// ─── DATA ────────────────────────────────────────────────────────────────────
 
-const WEEK_DAYS = [
-  { num: "20", day: "пн" },
-  { num: "21", day: "вт" },
-  { num: "22", day: "ср" },
-  { num: "23", day: "чт" },
-  { num: "24", day: "пт" },
-  { num: "25", day: "сб" },
-  { num: "26", day: "вс" },
+const GEROYCHIKI_S1: Episode[] = [
+  { num: 1, title: "Новые герои", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239052?from=video&linked=1&t=4s" },
+  { num: 2, title: "Плохая примета", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239053?from=video&linked=1" },
+  { num: 3, title: "Лунная гонка", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239054?from=video&linked=1" },
+  { num: 4, title: "Идеальный друг", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239055?from=video&linked=1&t=5s" },
+  { num: 5, title: "Флаг для Генерала", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239056?from=video&linked=1&t=26s" },
+  { num: 6, title: "Таинственная коробка", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239057?from=video&linked=1&t=15s" },
+  { num: 7, title: "Сладкая миссия", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239058?from=video&linked=1&t=1m43s" },
+  { num: 8, title: "Супергерой", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239059?from=video&linked=1" },
+  { num: 9, title: "Метод Флая", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239060?from=video&linked=1" },
+  { num: 10, title: "За фантазию", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239063?from=video&linked=1" },
+  { num: 11, title: "Любимая игрушка", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239065?from=video&linked=1" },
+  { num: 12, title: "Эмблема команды", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239070?from=video&linked=1" },
+  { num: 13, title: "Премия Пинки", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239068?from=video&linked=1" },
+  { num: 14, title: "Секрет Де-Кроля", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239071?from=video&linked=1" },
+  { num: 15, title: "Одиссея Бублика", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239072?from=video&linked=1" },
+  { num: 16, title: "Возвращение Пинки", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239073?from=video&linked=1" },
+  { num: 17, title: "Одиночество Бублика", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239074?from=video&linked=1&t=2m21s" },
+  { num: 18, title: "Страшный праздник", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239080?from=video&linked=1" },
+  { num: 19, title: "Хвост О-Раша", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239075?from=video&linked=1" },
+  { num: 20, title: "История Ко-Ко", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239076?from=video&linked=1&t=32s" },
+  { num: 21, title: "Конкурс точилок", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239077?from=video&linked=1" },
+  { num: 22, title: "Другая Глория", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239079?from=video&linked=1" },
+  { num: 23, title: "Мелкотрон Крузо", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239082?from=video&linked=1" },
+  { num: 24, title: "История Бублика", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239083?from=video&linked=1&t=3m10s" },
+  { num: 25, title: "Жаркий четверг", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239085?from=video&linked=1" },
+  { num: 26, title: "Блогер", url: "https://m.vkvideo.ru/playlist/-234589463_5/video-234589463_456239087?from=video&linked=1" },
 ];
 
-// ─── COMPONENTS ─────────────────────────────────────────────────────────────
+const ALL_SERIES: Series[] = [
+  {
+    id: "geroychiki",
+    title: "Геройчики",
+    age: "0+",
+    seasons: 2,
+    episodes: 26,
+    years: "2022–2023",
+    desc: "Мальчик Рома очень любит играть, поэтому в его комнате полным-полно разных игрушек. Кого здесь только нет: и загадочный пушистый инопланетянин Бублик, и отважный петух-тянучка Ко-Ко, и благородная ящерица-самурай О-Раш, и милая куколка Пинки, и воинственный плюшевый заяц Генерал Де-Кроль со своими роботами, и, конечно, отважные супергерои Флай и Глория. Все эти игрушки обожают игры, веселье, соревнования, приключения и вечеринки. Когда Ромы нет в комнате, они живут собственной увлекательной игрушечной жизнью.",
+    cover: "https://cdn.poehali.dev/projects/910fe3ca-ad3d-465b-9bdc-241cb78b681d/files/f6c5ffe3-c24c-4dad-a887-96e17d673011.jpg",
+    color: "#FF6B35",
+    gradient: "from-[#FF6B35] to-[#e84393]",
+    episodeList: [GEROYCHIKI_S1, []],
+  },
+  {
+    id: "um-i-hrum",
+    title: "Ум и Хрум",
+    age: "0+",
+    seasons: 1,
+    episodes: 0,
+    years: "2022–н.в.",
+    desc: "Описание будет добавлено позже.",
+    cover: "https://cdn.poehali.dev/projects/910fe3ca-ad3d-465b-9bdc-241cb78b681d/files/094001e8-0660-4b2b-b686-bd7a55ab2b58.jpg",
+    color: "#9B59B6",
+    gradient: "from-[#9B59B6] to-[#3498DB]",
+    episodeList: [[]],
+  },
+];
 
-function Logo() {
+const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
+  "Россия 1": [
+    { time: "06:00", title: "Утро России" },
+    { time: "09:00", title: "О самом главном", current: true },
+    { time: "10:00", title: "Вести в 10:00" },
+    { time: "12:00", title: "Судьба человека" },
+    { time: "14:00", title: "Вести в 14:00" },
+    { time: "15:00", title: "60 минут" },
+    { time: "18:00", title: "Вести в 18:00" },
+    { time: "20:00", title: "Вести недели" },
+    { time: "22:00", title: "Воскресный вечер" },
+  ],
+  "НТВ": [
+    { time: "06:00", title: "НТВ утром" },
+    { time: "08:00", title: "Утро. Самое лучшее" },
+    { time: "10:00", title: "Смотр" },
+    { time: "11:00", title: "Следствие вели...", current: true },
+    { time: "13:00", title: "Центральное телевидение" },
+    { time: "15:00", title: "Ты не поверишь!" },
+    { time: "17:00", title: "ЧП. Расследование" },
+    { time: "19:00", title: "Место встречи" },
+    { time: "21:00", title: "Сегодня вечером" },
+  ],
+  "СТС": [
+    { time: "06:00", title: "Том и Джерри" },
+    { time: "07:30", title: "Три кота" },
+    { time: "09:00", title: "СТС Kids" },
+    { time: "11:00", title: "Барбоскины", current: true },
+    { time: "12:30", title: "Кино на СТС" },
+    { time: "15:00", title: "Семейный просмотр" },
+    { time: "18:00", title: "Воронины" },
+    { time: "20:00", title: "СТС вечером" },
+    { time: "22:00", title: "Кино для взрослых" },
+  ],
+  "ТНТ": [
+    { time: "07:00", title: "Мультфильмы" },
+    { time: "09:00", title: "Однажды в России" },
+    { time: "11:00", title: "Интерны", current: true },
+    { time: "13:00", title: "Студия Союз" },
+    { time: "15:00", title: "Comedy Club" },
+    { time: "18:00", title: "Физрук" },
+    { time: "20:00", title: "ТНТ. Best" },
+    { time: "22:00", title: "Импровизация" },
+  ],
+  "Матч ТВ": [
+    { time: "07:00", title: "Все на Матч!" },
+    { time: "09:00", title: "Студия Матч" },
+    { time: "11:00", title: "Футбол. Обзор туров", current: true },
+    { time: "13:00", title: "Хоккей. КХЛ" },
+    { time: "16:00", title: "Футбол. РФПЛ" },
+    { time: "19:00", title: "Вечер на Матч" },
+    { time: "21:00", title: "Ночь на Матч" },
+  ],
+  "Культура": [
+    { time: "07:00", title: "Утро на Культуре" },
+    { time: "09:00", title: "Новости культуры" },
+    { time: "10:00", title: "Наблюдатель", current: true },
+    { time: "12:00", title: "Власть факта" },
+    { time: "14:00", title: "Кинопоэзия" },
+    { time: "16:00", title: "Документальный фильм" },
+    { time: "18:00", title: "Новости культуры" },
+    { time: "20:00", title: "Линия жизни" },
+    { time: "22:00", title: "Худсовет" },
+  ],
+  "Россия 24": [
+    { time: "00:00", title: "Новости 24/7", current: true },
+    { time: "09:00", title: "Утренние новости" },
+    { time: "12:00", title: "Дневные новости" },
+    { time: "18:00", title: "Вечерние новости" },
+    { time: "21:00", title: "Итоги дня" },
+  ],
+  "Пятый канал": [
+    { time: "06:00", title: "Утро на пятом" },
+    { time: "09:00", title: "Место происшествия", current: true },
+    { time: "11:00", title: "Сейчас" },
+    { time: "12:00", title: "Детективы" },
+    { time: "16:00", title: "Следователи" },
+    { time: "20:00", title: "Сейчас вечером" },
+    { time: "22:00", title: "Ночной эфир" },
+  ],
+  "РЕН ТВ": [
+    { time: "07:00", title: "Добров в эфире" },
+    { time: "09:00", title: "Территория заблуждений" },
+    { time: "12:00", title: "Засекреченные списки", current: true },
+    { time: "15:00", title: "Военная тайна" },
+    { time: "18:00", title: "Информационная программа" },
+    { time: "20:00", title: "Документальный фильм" },
+    { time: "22:00", title: "Ночной РЕН ТВ" },
+  ],
+  "ОТР": [
+    { time: "07:00", title: "ОТРажение" },
+    { time: "09:00", title: "Большая страна", current: true },
+    { time: "12:00", title: "ОТРажение (дневное)" },
+    { time: "15:00", title: "Документальный цикл" },
+    { time: "18:00", title: "ОТРажение" },
+    { time: "21:00", title: "Вечернее ОТРажение" },
+  ],
+  "ТВК": [
+    { time: "07:00", title: "Новости ТВК" },
+    { time: "09:00", title: "Утро с ТВК", current: true },
+    { time: "12:00", title: "Новости ТВК" },
+    { time: "15:00", title: "Местный прогноз" },
+    { time: "18:00", title: "Новости ТВК вечер" },
+    { time: "21:00", title: "Итоги дня ТВК" },
+  ],
+};
+
+const CHANNELS: Channel[] = [
+  { id: "russia1", name: "Россия 1", short: "Р1", color: "#E53935", emoji: "📺", desc: "Главный государственный телеканал страны" },
+  { id: "ntv", name: "НТВ", short: "НТВ", color: "#1565C0", emoji: "📰", desc: "Новости, кино и расследования" },
+  { id: "russia24", name: "Россия 24", short: "Р24", color: "#00838F", emoji: "🌐", desc: "Круглосуточный новостной канал" },
+  { id: "5tv", name: "Пятый канал", short: "5", color: "#2E7D32", emoji: "5️⃣", desc: "Новости, детективы, сериалы" },
+  { id: "rentv", name: "РЕН ТВ", short: "РЕН", color: "#F57F17", emoji: "🔍", desc: "Документальные расследования" },
+  { id: "sts", name: "СТС", short: "СТС", color: "#E91E8C", emoji: "🎭", desc: "Семейное развлекательное ТВ" },
+  { id: "tnt", name: "ТНТ", short: "ТНТ", color: "#FF6B35", emoji: "😄", desc: "Юмор и реалити-шоу" },
+  { id: "match", name: "Матч ТВ", short: "⚽", color: "#43A047", emoji: "⚽", desc: "Спортивные трансляции 24/7" },
+  { id: "kultura", name: "Культура", short: "К", color: "#6A1B9A", emoji: "🎭", desc: "Классика, документальное кино, искусство" },
+  { id: "otr", name: "ОТР", short: "ОТР", color: "#00796B", emoji: "🗣️", desc: "Общественное телевидение России" },
+  { id: "tvk", name: "ТВК", short: "ТВК", color: "#37474F", emoji: "📡", desc: "Региональное телевидение Красноярска" },
+];
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+
+const NAV = [
+  { id: "home", label: "Главная", icon: "Home" },
+  { id: "series", label: "Мультсериалы", icon: "PlayCircle" },
+  { id: "channels", label: "ТВ-каналы", icon: "Tv" },
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function extractVkId(url: string): string | null {
+  const m = url.match(/video(-?\d+_\d+)/);
+  return m ? m[1] : null;
+}
+
+// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+
+function Logo({ onClick }: { onClick: () => void }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E91E8C] to-[#FF6B35] flex items-center justify-center text-white text-lg font-black shadow-lg">
-        📺
+    <button onClick={onClick} className="flex items-center gap-2.5 group">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E91E8C] to-[#FF6B35] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+        <span className="text-lg">🚀</span>
       </div>
-      <div>
-        <div className="font-black text-lg leading-none text-gray-900" style={{ fontFamily: "Nunito" }}>
-          КарусельГид
+      <div className="text-left">
+        <div className="font-black text-white text-lg leading-none" style={{ fontFamily: "Nunito" }}>
+          Поехали
         </div>
-        <div className="text-[10px] text-gray-400 font-medium leading-none mt-0.5">программа передач</div>
+        <div className="text-[10px] text-white/40 leading-none mt-0.5">онлайн-кинотеатр</div>
       </div>
-    </div>
+    </button>
   );
 }
 
 function Navbar({ active, setActive }: { active: string; setActive: (id: string) => void }) {
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-        <Logo />
-        <div className="flex items-center gap-1">
-          {NAV_ITEMS.map((item) => (
+    <nav className="sticky top-0 z-50 bg-[#0d0f1a]/95 backdrop-blur-md border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 h-16">
+        <Logo onClick={() => setActive("home")} />
+        <div className="flex items-center gap-1 ml-4">
+          {NAV.map((item) => (
             <button
               key={item.id}
               onClick={() => setActive(item.id)}
-              className={`hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                 active === item.id
-                  ? "bg-[#E91E8C] text-white shadow-md shadow-pink-200"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                  ? "bg-[#E91E8C] text-white shadow-lg shadow-pink-900/30"
+                  : "text-white/50 hover:text-white hover:bg-white/5"
               }`}
               style={{ fontFamily: "Golos Text" }}
             >
-              <Icon name={item.icon} size={16} />
-              {item.label}
+              <Icon name={item.icon} size={15} />
+              <span className="hidden sm:inline">{item.label}</span>
             </button>
           ))}
         </div>
-      </div>
-      {/* Mobile bottom nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 flex">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActive(item.id)}
-            className={`flex-1 flex flex-col items-center py-2 gap-0.5 transition-colors ${
-              active === item.id ? "text-[#E91E8C]" : "text-gray-400"
-            }`}
-          >
-            <Icon name={item.icon} size={20} />
-            <span className="text-[9px] font-semibold">{item.label}</span>
-          </button>
-        ))}
       </div>
     </nav>
   );
 }
 
-// ─── HOME ───────────────────────────────────────────────────────────────────
+// ─── PLAYER MODAL ────────────────────────────────────────────────────────────
+
+function PlayerModal({
+  episode,
+  series,
+  onClose,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+}: {
+  episode: Episode;
+  series: Series;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
+}) {
+  const vkId = extractVkId(episode.url);
+  const embedUrl = vkId
+    ? `https://vkvideo.ru/video_ext.php?oid=${vkId.split("_")[0]}&id=${vkId.split("_")[1]}&hd=2&autoplay=1`
+    : null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-4 px-4 py-3 border-b border-white/10 flex-shrink-0">
+        <button onClick={onClose} className="text-white/50 hover:text-white transition-colors">
+          <Icon name="X" size={20} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="text-white font-bold truncate" style={{ fontFamily: "Golos Text" }}>
+            {series.title} · Серия {episode.num}
+          </div>
+          <div className="text-white/40 text-sm truncate">{episode.title}</div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onPrev}
+            disabled={!hasPrev}
+            className="px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm font-medium disabled:opacity-30 hover:bg-white/20 transition-colors flex items-center gap-1"
+          >
+            <Icon name="ChevronLeft" size={16} />
+            Пред.
+          </button>
+          <button
+            onClick={onNext}
+            disabled={!hasNext}
+            className="px-3 py-1.5 rounded-lg bg-[#E91E8C] text-white text-sm font-medium disabled:opacity-30 hover:bg-[#d01578] transition-colors flex items-center gap-1"
+          >
+            След.
+            <Icon name="ChevronRight" size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Player */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        {embedUrl ? (
+          <div className="w-full max-w-5xl aspect-video rounded-2xl overflow-hidden shadow-2xl">
+            <iframe
+              src={embedUrl}
+              className="w-full h-full"
+              allowFullScreen
+              allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            />
+          </div>
+        ) : (
+          <div className="text-white/40 text-center">
+            <Icon name="VideoOff" size={48} />
+            <div className="mt-3">Плеер недоступен</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SERIES DETAIL ───────────────────────────────────────────────────────────
+
+function SeriesDetail({ series, onBack }: { series: Series; onBack: () => void }) {
+  const [activeSeason, setActiveSeason] = useState(0);
+  const [playingEp, setPlayingEp] = useState<Episode | null>(null);
+  const episodes = series.episodeList[activeSeason] ?? [];
+  const currentIdx = playingEp ? episodes.findIndex((e) => e.num === playingEp.num) : -1;
+
+  return (
+    <div className="min-h-screen bg-[#0d0f1a]">
+      {/* Banner */}
+      <div className="relative h-72 md:h-96 overflow-hidden">
+        <img src={series.cover} alt={series.title} className="w-full h-full object-cover opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f1a] via-[#0d0f1a]/60 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm mb-4 transition-colors"
+          >
+            <Icon name="ChevronLeft" size={16} />
+            Назад
+          </button>
+          <div className="flex items-end gap-4">
+            <img src={series.cover} alt={series.title} className="w-20 h-20 md:w-28 md:h-28 rounded-2xl object-cover shadow-2xl border-2 border-white/10 flex-shrink-0" />
+            <div>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="text-xs bg-white/20 text-white px-2.5 py-1 rounded-full font-medium">{series.age}</span>
+                <span className="text-xs text-white/50">{series.years}</span>
+                <span className="text-xs text-white/50">· {series.seasons} сезона</span>
+                <span className="text-xs text-white/50">· {series.episodes} серий</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-black text-white" style={{ fontFamily: "Nunito" }}>
+                {series.title}
+              </h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
+        {/* Description */}
+        <p className="text-white/60 leading-relaxed mb-8 text-sm md:text-base">{series.desc}</p>
+
+        {/* Season tabs */}
+        <div className="flex gap-2 mb-6">
+          {series.episodeList.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveSeason(i)}
+              className={`px-5 py-2 rounded-xl font-semibold text-sm transition-all ${
+                activeSeason === i
+                  ? "bg-[#E91E8C] text-white shadow-lg shadow-pink-900/30"
+                  : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+              }`}
+              style={{ fontFamily: "Golos Text" }}
+            >
+              Сезон {i + 1}
+            </button>
+          ))}
+        </div>
+
+        {/* Episodes */}
+        {episodes.length === 0 ? (
+          <div className="text-center py-16 text-white/20">
+            <div className="text-4xl mb-3">🎬</div>
+            <div className="font-semibold">Серии будут добавлены позже</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-2">
+            {episodes.map((ep) => (
+              <button
+                key={ep.num}
+                onClick={() => setPlayingEp(ep)}
+                className="flex items-center gap-4 bg-white/5 hover:bg-white/10 rounded-2xl px-5 py-4 text-left transition-all group border border-white/0 hover:border-white/10"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white/40 font-black text-sm group-hover:bg-[#E91E8C] group-hover:text-white transition-all flex-shrink-0">
+                  {ep.num}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-semibold text-sm truncate" style={{ fontFamily: "Golos Text" }}>
+                    {ep.title}
+                  </div>
+                  <div className="text-white/30 text-xs mt-0.5">Серия {ep.num}</div>
+                </div>
+                <div className="text-white/20 group-hover:text-[#E91E8C] transition-colors flex-shrink-0">
+                  <Icon name="Play" size={18} />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Player */}
+      {playingEp && (
+        <PlayerModal
+          episode={playingEp}
+          series={series}
+          onClose={() => setPlayingEp(null)}
+          onPrev={() => currentIdx > 0 && setPlayingEp(episodes[currentIdx - 1])}
+          onNext={() => currentIdx < episodes.length - 1 && setPlayingEp(episodes[currentIdx + 1])}
+          hasPrev={currentIdx > 0}
+          hasNext={currentIdx < episodes.length - 1}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── SERIES PAGE ─────────────────────────────────────────────────────────────
+
+function SeriesPage() {
+  const [selected, setSelected] = useState<Series | null>(null);
+  if (selected) return <SeriesDetail series={selected} onBack={() => setSelected(null)} />;
+
+  return (
+    <div className="min-h-screen bg-[#0d0f1a]">
+      <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
+        <h1 className="text-3xl font-black text-white mb-1" style={{ fontFamily: "Nunito" }}>🎬 Мультсериалы</h1>
+        <p className="text-white/40 mb-8">Смотри любимые мультики онлайн</p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {ALL_SERIES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSelected(s)}
+              className="group text-left rounded-2xl overflow-hidden bg-white/5 border border-white/5 hover:border-white/20 transition-all hover:-translate-y-1 hover:shadow-2xl"
+            >
+              <div className="relative aspect-square overflow-hidden">
+                <img
+                  src={s.cover}
+                  alt={s.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute bottom-2 left-2 flex gap-1.5">
+                  <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full backdrop-blur-sm font-medium">
+                    {s.age}
+                  </span>
+                  <span className="text-xs bg-[#E91E8C]/80 text-white px-2 py-0.5 rounded-full backdrop-blur-sm font-medium">
+                    {s.seasons} сезона
+                  </span>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-14 h-14 rounded-full bg-[#E91E8C] flex items-center justify-center shadow-xl">
+                    <Icon name="Play" size={24} />
+                  </div>
+                </div>
+              </div>
+              <div className="p-3">
+                <div className="font-bold text-white text-sm leading-tight" style={{ fontFamily: "Golos Text" }}>
+                  {s.title}
+                </div>
+                <div className="text-white/30 text-xs mt-1">{s.years} · {s.episodes} серий</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CHANNELS PAGE ───────────────────────────────────────────────────────────
+
+function ChannelsPage() {
+  const [selectedCh, setSelectedCh] = useState<Channel | null>(null);
+
+  return (
+    <div className="min-h-screen bg-[#0d0f1a]">
+      <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
+        <h1 className="text-3xl font-black text-white mb-1" style={{ fontFamily: "Nunito" }}>📡 ТВ-каналы</h1>
+        <p className="text-white/40 mb-8">Программа передач федеральных каналов</p>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-10">
+          {CHANNELS.map((ch) => (
+            <button
+              key={ch.id}
+              onClick={() => setSelectedCh(selectedCh?.id === ch.id ? null : ch)}
+              className={`rounded-2xl p-4 text-left transition-all border ${
+                selectedCh?.id === ch.id
+                  ? "border-[#E91E8C] bg-[#E91E8C]/10 shadow-lg shadow-pink-900/20"
+                  : "border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10"
+              }`}
+            >
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3 font-black"
+                style={{ background: ch.color + "25" }}
+              >
+                {ch.emoji}
+              </div>
+              <div className="font-bold text-white text-sm" style={{ fontFamily: "Golos Text" }}>{ch.name}</div>
+              <div className="text-white/30 text-xs mt-0.5 leading-tight">{ch.desc}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Schedule panel */}
+        {selectedCh && (
+          <div className="animate-fade-in">
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black"
+                style={{ background: selectedCh.color + "30" }}
+              >
+                {selectedCh.emoji}
+              </div>
+              <div>
+                <h2 className="text-white font-black text-lg" style={{ fontFamily: "Nunito" }}>{selectedCh.name}</h2>
+                <div className="text-white/30 text-xs">Программа передач · 25 апреля</div>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              {(SCHEDULE_DATA[selectedCh.name] || []).map((item, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-4 rounded-2xl px-5 py-3 transition-all ${
+                    item.current
+                      ? "bg-gradient-to-r from-[#E91E8C]/20 to-[#FF6B35]/10 border border-[#E91E8C]/30"
+                      : "bg-white/5 border border-white/0"
+                  }`}
+                >
+                  <div
+                    className={`font-black text-sm w-12 flex-shrink-0 ${item.current ? "text-[#E91E8C]" : "text-white/40"}`}
+                    style={{ fontFamily: "Nunito" }}
+                  >
+                    {item.time}
+                  </div>
+                  {item.current && (
+                    <div className="w-2 h-2 rounded-full bg-[#E91E8C] flex-shrink-0 animate-pulse" />
+                  )}
+                  <div className={`font-semibold text-sm flex-1 ${item.current ? "text-white" : "text-white/70"}`}
+                    style={{ fontFamily: "Golos Text" }}>
+                    {item.title}
+                  </div>
+                  {item.current && (
+                    <span className="text-[10px] font-bold text-[#E91E8C] bg-[#E91E8C]/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                      В ЭФИРЕ
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!selectedCh && (
+          <div className="text-center py-16 text-white/20">
+            <div className="text-4xl mb-3">📺</div>
+            <div className="font-semibold">Выберите канал, чтобы увидеть программу передач</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── HOME ─────────────────────────────────────────────────────────────────────
 
 function HomePage({ setActive }: { setActive: (id: string) => void }) {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pb-24 md:pb-8">
+    <div className="min-h-screen bg-[#0d0f1a]">
       {/* Hero */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#E91E8C] via-[#c0136e] to-[#FF6B35] p-8 md:p-12 mb-8 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 opacity-10">
-          <img src="https://cdn.poehali.dev/projects/910fe3ca-ad3d-465b-9bdc-241cb78b681d/files/1683c972-e18c-44dc-a7a7-f57f038f1095.jpg" alt="" className="w-full h-full object-cover" />
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://cdn.poehali.dev/projects/910fe3ca-ad3d-465b-9bdc-241cb78b681d/files/ae4507f5-141c-4a52-98ff-aca943d4e5c7.jpg"
+            alt=""
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d0f1a]/60 via-transparent to-[#0d0f1a]" />
         </div>
-        <div className="relative z-10">
-          <div className="text-5xl mb-4">📺✨</div>
-          <h1 className="text-3xl md:text-5xl font-black leading-tight mb-3" style={{ fontFamily: "Nunito" }}>
-            Всё детское ТВ<br />в одном месте
+        <div className="relative max-w-7xl mx-auto px-4 pt-16 pb-24 text-center">
+          <div className="inline-flex items-center gap-2 bg-[#E91E8C]/20 border border-[#E91E8C]/30 rounded-full px-4 py-1.5 mb-6">
+            <div className="w-2 h-2 rounded-full bg-[#E91E8C] animate-pulse" />
+            <span className="text-[#E91E8C] text-xs font-bold tracking-wide">СМОТРЕТЬ ОНЛАЙН БЕСПЛАТНО</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black text-white mb-4 leading-tight" style={{ fontFamily: "Nunito" }}>
+            Детское кино<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E91E8C] to-[#FF6B35]">без рекламы</span>
           </h1>
-          <p className="text-pink-100 text-lg mb-6 max-w-lg">
-            Программа передач, расписание мультфильмов и каталог сериалов для ваших детей
+          <p className="text-white/50 text-lg mb-8 max-w-xl mx-auto">
+            Мультсериалы, программа передач и прямой эфир в одном месте
           </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setActive("schedule")}
-              className="bg-white text-[#E91E8C] font-bold px-6 py-3 rounded-2xl hover:bg-pink-50 transition-colors shadow-lg"
-              style={{ fontFamily: "Golos Text" }}
-            >
-              📅 Программа сегодня
-            </button>
+          <div className="flex justify-center gap-3 flex-wrap">
             <button
               onClick={() => setActive("series")}
-              className="bg-white/20 text-white font-bold px-6 py-3 rounded-2xl hover:bg-white/30 transition-colors border border-white/30"
+              className="bg-gradient-to-r from-[#E91E8C] to-[#FF6B35] text-white font-bold px-8 py-3.5 rounded-2xl hover:opacity-90 transition-opacity shadow-xl shadow-pink-900/30 flex items-center gap-2"
               style={{ fontFamily: "Golos Text" }}
             >
-              🎬 Мультсериалы
+              <Icon name="Play" size={18} />
+              Смотреть мультики
+            </button>
+            <button
+              onClick={() => setActive("channels")}
+              className="bg-white/10 text-white font-bold px-8 py-3.5 rounded-2xl hover:bg-white/20 transition-colors border border-white/10 flex items-center gap-2"
+              style={{ fontFamily: "Golos Text" }}
+            >
+              <Icon name="Tv" size={18} />
+              ТВ-каналы
             </button>
           </div>
         </div>
       </div>
 
       {/* Now on air */}
-      <div className="mb-8">
-        <h2 className="text-xl font-black text-gray-900 mb-4" style={{ fontFamily: "Nunito" }}>
-          🟢 Сейчас в эфире
-        </h2>
-        <div className="bg-gradient-to-r from-[#2ECC71] to-[#1ABC9C] rounded-2xl p-5 text-white flex items-center gap-4 shadow-lg shadow-green-100">
-          <div className="text-4xl">🔧</div>
-          <div className="flex-1">
-            <div className="font-black text-xl" style={{ fontFamily: "Nunito" }}>Фиксики. Большой секрет</div>
-            <div className="text-green-100 text-sm">19:30 · Карусель · 6+</div>
-            <div className="text-white/80 text-sm mt-1">Героям нужно объединиться, чтобы спасти самый большой секрет!</div>
-          </div>
-          <div className="hidden md:flex flex-col items-center">
-            <div className="text-2xl font-black">19:30</div>
-            <div className="text-green-100 text-xs">в эфире</div>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 pb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <h2 className="text-white font-bold" style={{ fontFamily: "Golos Text" }}>Сейчас в эфире</h2>
         </div>
-      </div>
-
-      {/* Quick sections */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[
-          { icon: "📺", label: "Программа передач", sub: "25 апреля", action: "schedule", color: "from-[#E91E8C] to-[#c0136e]" },
-          { icon: "🎬", label: "Мультсериалы", sub: "8 сериалов", action: "series", color: "from-[#3498DB] to-[#2980B9]" },
-          { icon: "📡", label: "ТВ-каналы", sub: "6 каналов", action: "channels", color: "from-[#FF6B35] to-[#e55a22]" },
-          { icon: "🔍", label: "Поиск", sub: "Найти передачу", action: "search", color: "from-[#9B59B6] to-[#8e44ad]" },
-        ].map((card) => (
-          <button
-            key={card.action}
-            onClick={() => setActive(card.action)}
-            className={`bg-gradient-to-br ${card.color} text-white rounded-2xl p-5 text-left hover:scale-105 transition-transform shadow-md`}
-          >
-            <div className="text-3xl mb-2">{card.icon}</div>
-            <div className="font-bold text-sm" style={{ fontFamily: "Golos Text" }}>{card.label}</div>
-            <div className="text-white/70 text-xs mt-0.5">{card.sub}</div>
-          </button>
-        ))}
-      </div>
-
-      {/* Popular series */}
-      <div>
-        <h2 className="text-xl font-black text-gray-900 mb-4" style={{ fontFamily: "Nunito" }}>
-          ⭐ Популярные мультсериалы
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {SERIES.slice(0, 4).map((s) => (
-            <div key={s.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="text-3xl mb-2">{s.emoji}</div>
-              <div className="font-bold text-gray-900 text-sm leading-tight" style={{ fontFamily: "Golos Text" }}>{s.title}</div>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">{s.age}</span>
-                <span className="text-xs text-gray-400">{s.genre}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── SERIES ─────────────────────────────────────────────────────────────────
-
-function SeriesPage() {
-  const [filter, setFilter] = useState("all");
-  const genres = ["all", "Комедия", "Познавательный", "Приключения", "Природа", "Семейный", "Фэнтези"];
-  const filtered = filter === "all" ? SERIES : SERIES.filter((s) => s.genre === filter);
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pb-24 md:pb-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-black text-gray-900 mb-1" style={{ fontFamily: "Nunito" }}>🎬 Мультсериалы</h1>
-        <p className="text-gray-400">Каталог детских сериалов в эфире</p>
-      </div>
-
-      {/* Filter chips */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {genres.map((g) => (
-          <button
-            key={g}
-            onClick={() => setFilter(g)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
-              filter === g ? "bg-[#E91E8C] text-white shadow-md" : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"
-            }`}
-            style={{ fontFamily: "Golos Text" }}
-          >
-            {g === "all" ? "Все жанры" : g}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map((s) => (
-          <div key={s.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all hover:-translate-y-0.5 flex items-center gap-4">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-              style={{ background: s.color + "20" }}
-            >
-              {s.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-gray-900" style={{ fontFamily: "Golos Text" }}>{s.title}</div>
-              <div className="text-sm text-gray-400 mt-0.5">{s.genre} · {s.episodes} серий</div>
-              <div className="flex items-center gap-2 mt-2">
-                <span
-                  className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
-                  style={{ background: s.color }}
-                >
-                  {s.age}
-                </span>
-              </div>
-            </div>
-            <button className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-300 hover:text-[#E91E8C] hover:bg-pink-50 transition-colors flex-shrink-0">
-              <Icon name="Bell" size={18} />
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── CHANNELS ───────────────────────────────────────────────────────────────
-
-function ChannelsPage() {
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pb-24 md:pb-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-black text-gray-900 mb-1" style={{ fontFamily: "Nunito" }}>📡 ТВ-каналы</h1>
-        <p className="text-gray-400">Детские телеканалы в вашем кабельном пакете</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {CHANNELS.map((ch) => (
-          <div key={ch.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all hover:-translate-y-1">
-            <div className="flex items-center gap-4 mb-4">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-sm"
-                style={{ background: ch.color + "20" }}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-10">
+          {CHANNELS.slice(0, 6).map((ch) => {
+            const current = SCHEDULE_DATA[ch.name]?.find((s) => s.current);
+            return (
+              <button
+                key={ch.id}
+                onClick={() => setActive("channels")}
+                className="bg-white/5 border border-white/5 hover:border-white/20 rounded-2xl p-3 text-left transition-all hover:-translate-y-0.5"
               >
-                {ch.emoji}
-              </div>
-              <div>
-                <div className="font-black text-gray-900 text-lg" style={{ fontFamily: "Nunito" }}>{ch.name}</div>
-                <div className="text-xs text-gray-400 font-medium">{ch.freq}</div>
-              </div>
-            </div>
-            <p className="text-gray-500 text-sm leading-relaxed">{ch.desc}</p>
-            <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-              <span className="text-xs text-gray-400">Нажмите, чтобы смотреть программу</span>
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white"
-                style={{ background: ch.color }}
-              >
-                <Icon name="ChevronRight" size={16} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-8 bg-gradient-to-r from-[#3498DB] to-[#2980B9] rounded-2xl p-6 text-white">
-        <div className="text-2xl mb-2">📶</div>
-        <h3 className="font-black text-lg mb-1" style={{ fontFamily: "Nunito" }}>Онлайн-просмотр</h3>
-        <p className="text-blue-100 text-sm">Все перечисленные каналы доступны в кабельном, спутниковом и цифровом эфирном ТВ. Точный номер кнопки зависит от вашего оператора.</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── SCHEDULE ───────────────────────────────────────────────────────────────
-
-function SchedulePage() {
-  const [selectedDay, setSelectedDay] = useState("25");
-  const [showPast, setShowPast] = useState(false);
-  const items = SCHEDULE[selectedDay] || [];
-  const past = items.filter((i) => i.past);
-  const upcoming = items.filter((i) => !i.past);
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pb-24 md:pb-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-black text-gray-900 mb-1" style={{ fontFamily: "Nunito" }}>📅 Программа передач</h1>
-        <p className="text-gray-400">Канал Карусель · апрель 2026</p>
-      </div>
-
-      {/* Day picker */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-        {WEEK_DAYS.map((d) => (
-          <button
-            key={d.num}
-            onClick={() => setSelectedDay(d.num)}
-            className={`flex-shrink-0 flex flex-col items-center w-14 py-2 rounded-2xl font-bold transition-all ${
-              selectedDay === d.num
-                ? "bg-[#E91E8C] text-white shadow-md shadow-pink-200"
-                : "bg-white text-gray-500 border border-gray-200 hover:border-pink-200"
-            }`}
-            style={{ fontFamily: "Golos Text" }}
-          >
-            <span className="text-lg leading-none">{d.num}</span>
-            <span className="text-[10px] mt-0.5 uppercase tracking-wide">{d.day}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Past toggle */}
-      {past.length > 0 && (
-        <button
-          onClick={() => setShowPast(!showPast)}
-          className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-2xl px-5 py-3 mb-4 text-gray-500 hover:border-gray-300 transition-colors"
-          style={{ fontFamily: "Golos Text" }}
-        >
-          <span className="font-semibold text-sm">Прошедшие передачи ({past.length})</span>
-          <Icon name={showPast ? "ChevronUp" : "ChevronDown"} size={18} />
-        </button>
-      )}
-
-      {showPast && past.length > 0 && (
-        <div className="space-y-2 mb-4">
-          {past.map((item, i) => (
-            <ScheduleCard key={i} item={item} dimmed />
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-2">
-        {upcoming.map((item, i) => (
-          <ScheduleCard key={i} item={item} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ScheduleCard({ item, dimmed }: { item: ScheduleItem; dimmed?: boolean }) {
-  return (
-    <div
-      className={`flex items-center gap-4 rounded-2xl p-4 transition-all ${
-        item.current
-          ? "bg-gradient-to-r from-[#2ECC71] to-[#1ABC9C] text-white shadow-lg shadow-green-100"
-          : dimmed
-          ? "bg-white border border-gray-100 opacity-60"
-          : "bg-white border border-gray-100 hover:shadow-sm"
-      }`}
-    >
-      <div className={`text-xl font-black w-14 flex-shrink-0 ${item.current ? "text-white" : "text-gray-400"}`} style={{ fontFamily: "Nunito" }}>
-        {item.time}
-      </div>
-      <div className="text-2xl flex-shrink-0">{item.emoji}</div>
-      <div className="flex-1 min-w-0">
-        <div className={`font-bold text-sm ${item.current ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "Golos Text" }}>
-          {item.title}
-          <span className={`ml-2 text-xs font-normal ${item.current ? "text-green-100" : "text-gray-400"}`}>{item.age}</span>
-        </div>
-        <div className={`text-xs mt-0.5 truncate ${item.current ? "text-green-100" : "text-gray-400"}`}>{item.desc}</div>
-      </div>
-      <button className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors flex-shrink-0 ${
-        item.current ? "text-white/70 hover:text-white" : "text-gray-300 hover:text-[#E91E8C] hover:bg-pink-50"
-      }`}>
-        <Icon name="Bell" size={16} />
-      </button>
-    </div>
-  );
-}
-
-// ─── SEARCH ─────────────────────────────────────────────────────────────────
-
-function SearchPage() {
-  const [query, setQuery] = useState("");
-  const all = [...SERIES.map((s) => ({ type: "series", title: s.title, sub: `Сериал · ${s.genre} · ${s.age}`, emoji: s.emoji })),
-    ...CHANNELS.map((c) => ({ type: "channel", title: c.name, sub: `Канал · ${c.freq}`, emoji: c.emoji })),
-    ...SCHEDULE["25"].map((s) => ({ type: "schedule", title: s.title, sub: `Программа · ${s.time}`, emoji: s.emoji })),
-  ];
-  const results = query.length > 1 ? all.filter((i) => i.title.toLowerCase().includes(query.toLowerCase())) : [];
-  const popular = SERIES.slice(0, 6);
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pb-24 md:pb-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-black text-gray-900 mb-1" style={{ fontFamily: "Nunito" }}>🔍 Поиск</h1>
-        <p className="text-gray-400">Найдите мультфильм или передачу</p>
-      </div>
-
-      <div className="relative mb-6">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300">
-          <Icon name="Search" size={20} />
-        </div>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Маша и Медведь, Фиксики, Карусель..."
-          className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#E91E8C] outline-none text-gray-900 text-lg font-medium transition-colors bg-white"
-          style={{ fontFamily: "Golos Text" }}
-        />
-      </div>
-
-      {query.length > 1 ? (
-        <div>
-          <p className="text-sm text-gray-400 mb-3">Найдено: {results.length}</p>
-          {results.length === 0 ? (
-            <div className="text-center py-16 text-gray-300">
-              <div className="text-5xl mb-3">🔦</div>
-              <div className="font-semibold text-gray-400">Ничего не найдено</div>
-              <div className="text-sm mt-1">Попробуйте другой запрос</div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {results.map((r, i) => (
-                <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:shadow-sm transition-shadow">
-                  <div className="text-2xl">{r.emoji}</div>
-                  <div>
-                    <div className="font-bold text-gray-900 text-sm" style={{ fontFamily: "Golos Text" }}>{r.title}</div>
-                    <div className="text-xs text-gray-400">{r.sub}</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
+                    style={{ background: ch.color + "30" }}
+                  >
+                    {ch.emoji}
                   </div>
+                  <span className="text-white/60 text-xs font-bold">{ch.name}</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div>
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Популярные запросы</h3>
-          <div className="flex flex-wrap gap-2 mb-8">
-            {["Маша и Медведь", "Фиксики", "Смешарики", "Карусель", "Барбоскины", "Лунтик"].map((q) => (
-              <button
-                key={q}
-                onClick={() => setQuery(q)}
-                className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-full text-sm font-medium hover:border-[#E91E8C] hover:text-[#E91E8C] transition-colors"
-                style={{ fontFamily: "Golos Text" }}
-              >
-                {q}
+                <div className="text-white text-xs font-semibold leading-tight line-clamp-2" style={{ fontFamily: "Golos Text" }}>
+                  {current?.title ?? "—"}
+                </div>
               </button>
-            ))}
-          </div>
-          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Сериалы</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {popular.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setQuery(s.title)}
-                className="bg-white border border-gray-100 rounded-2xl p-4 text-left hover:shadow-md transition-all hover:-translate-y-0.5"
-              >
-                <div className="text-2xl mb-1">{s.emoji}</div>
-                <div className="font-bold text-gray-900 text-sm" style={{ fontFamily: "Golos Text" }}>{s.title}</div>
-                <div className="text-xs text-gray-400">{s.genre}</div>
-              </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Mults promo */}
+        <h2 className="text-white font-bold mb-4" style={{ fontFamily: "Golos Text" }}>🎬 Мультсериалы</h2>
+        <div className="grid grid-cols-2 gap-4 mb-10">
+          {ALL_SERIES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setActive("series")}
+              className="group relative rounded-2xl overflow-hidden border border-white/5 hover:border-white/20 transition-all hover:-translate-y-0.5"
+            >
+              <img src={s.cover} alt={s.title} className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="font-black text-white text-lg leading-tight" style={{ fontFamily: "Nunito" }}>{s.title}</div>
+                <div className="text-white/50 text-xs mt-0.5">{s.seasons} сезона · {s.episodes} серий</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─── APP ────────────────────────────────────────────────────────────────────
+// ─── ROOT ─────────────────────────────────────────────────────────────────────
 
 const Index = () => {
   const [active, setActive] = useState("home");
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily: "Golos Text" }}>
+    <div className="min-h-screen bg-[#0d0f1a]" style={{ fontFamily: "Golos Text" }}>
       <Navbar active={active} setActive={setActive} />
-      <main>
-        {active === "home" && <HomePage setActive={setActive} />}
-        {active === "series" && <SeriesPage />}
-        {active === "channels" && <ChannelsPage />}
-        {active === "schedule" && <SchedulePage />}
-        {active === "search" && <SearchPage />}
-      </main>
+      {active === "home" && <HomePage setActive={setActive} />}
+      {active === "series" && <SeriesPage />}
+      {active === "channels" && <ChannelsPage />}
     </div>
   );
 };
