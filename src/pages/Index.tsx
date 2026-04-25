@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
@@ -101,6 +101,32 @@ const ALL_SERIES: Series[] = [
 ];
 
 const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
+  "Карусель": [
+    { time: "05:00", title: "Лунтик 0+", age: "0+" },
+    { time: "07:00", title: "С добрым утром, малыши! 0+", age: "0+" },
+    { time: "07:30", title: "Погода 0+", age: "0+" },
+    { time: "07:35", title: "Беби Борн 0+", age: "0+" },
+    { time: "07:40", title: "Простоквашино 0+", age: "0+" },
+    { time: "08:40", title: "Бумажки 0+", age: "0+" },
+    { time: "09:10", title: "Простоквашино 0+", age: "0+" },
+    { time: "10:00", title: "Съедобное или несъедобное 0+", age: "0+" },
+    { time: "10:20", title: "Мастер Витя и Мотор 0+", age: "0+" },
+    { time: "12:00", title: "Парк Турум-Бурум 0+", age: "0+" },
+    { time: "12:15", title: "Барбоскины 0+", age: "0+" },
+    { time: "14:00", title: "Зоомания 6+", age: "6+" },
+    { time: "14:20", title: "Чик-Чирикино 0+", age: "0+" },
+    { time: "16:00", title: "Большое Шоу 6+", age: "6+" },
+    { time: "16:30", title: "Сказочный патруль. Дорога домой 0+", age: "0+" },
+    { time: "19:30", title: "Фиксики. Большой секрет 6+", age: "6+", current: true },
+    { time: "20:40", title: "Фиксипелки 0+", age: "0+" },
+    { time: "21:00", title: "Спокойной ночи, малыши! 0+", age: "0+" },
+    { time: "21:15", title: "Ум и Хрум 0+", age: "0+" },
+    { time: "23:00", title: "Дикие Скричеры! 6+", age: "6+" },
+    { time: "23:15", title: "Приключения Пети и Волка 12+", age: "12+" },
+    { time: "02:00", title: "Маша и Медведь 0+", age: "0+" },
+    { time: "04:05", title: "Маша и Медведь. Песенки для малышей 0+", age: "0+" },
+    { time: "04:10", title: "Маша и Медведь 0+", age: "0+" },
+  ],
   "Россия 1": [
     { time: "06:00", title: "Утро России" },
     { time: "09:00", title: "О самом главном", current: true },
@@ -208,6 +234,7 @@ const SCHEDULE_DATA: Record<string, ScheduleItem[]> = {
 };
 
 const CHANNELS: Channel[] = [
+  { id: "karusel", name: "Карусель", short: "🎠", color: "#E91E8C", emoji: "🎠", desc: "Главный детский телеканал России" },
   { id: "russia1", name: "Россия 1", short: "Р1", color: "#E53935", emoji: "📺", desc: "Главный государственный телеканал страны" },
   { id: "ntv", name: "НТВ", short: "НТВ", color: "#1565C0", emoji: "📰", desc: "Новости, кино и расследования" },
   { id: "russia24", name: "Россия 24", short: "Р24", color: "#00838F", emoji: "🌐", desc: "Круглосуточный новостной канал" },
@@ -236,6 +263,30 @@ function extractVkId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+function useClock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
+function LiveClock() {
+  const t = useClock();
+  const hh = String(t.getHours()).padStart(2, "0");
+  const mm = String(t.getMinutes()).padStart(2, "0");
+  const ss = String(t.getSeconds()).padStart(2, "0");
+  return (
+    <div className="hidden md:flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 ml-auto">
+      <Icon name="Clock" size={13} />
+      <span className="text-white/70 text-sm font-mono font-bold tracking-widest">
+        {hh}<span className="text-white/30 animate-pulse">:</span>{mm}<span className="text-white/30 animate-pulse">:</span>{ss}
+      </span>
+    </div>
+  );
+}
+
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
 function Logo({ onClick }: { onClick: () => void }) {
@@ -257,9 +308,9 @@ function Logo({ onClick }: { onClick: () => void }) {
 function Navbar({ active, setActive }: { active: string; setActive: (id: string) => void }) {
   return (
     <nav className="sticky top-0 z-50 bg-[#0d0f1a]/95 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 h-16">
+      <div className="max-w-7xl mx-auto px-4 flex items-center gap-3 h-16">
         <Logo onClick={() => setActive("home")} />
-        <div className="flex items-center gap-1 ml-4">
+        <div className="flex items-center gap-1 ml-2">
           {NAV.map((item) => (
             <button
               key={item.id}
@@ -276,6 +327,7 @@ function Navbar({ active, setActive }: { active: string; setActive: (id: string)
             </button>
           ))}
         </div>
+        <LiveClock />
       </div>
     </nav>
   );
