@@ -4,8 +4,17 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 240 20% 97%;
+    --foreground: 230 25% 15%;
+
+    --tv-pink: #e91e8c;
+    --tv-orange: #ff6b35;
+    --tv-green: #2ecc71;
+    --tv-blue: #3498db;
+    --tv-purple: #9b59b6;
+    --tv-yellow: #f1c40f;
+    --tv-red: #e74c3c;
+    --tv-teal: #1abc9c;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
